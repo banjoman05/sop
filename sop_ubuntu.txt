@@ -1,0 +1,197 @@
+# Ubuntu 16.04
+# Ubuntu 18.04 (minimal changes) 
+# Ubuntu 20.04 (minimal changes) 
+
+
+# Install Stuff: Server
+apt install openssh-server vim htop sudo fail2ban ufw unzip screen bash-completion net-tools build-essential nload curl software-properties-common dbus
+
+# Install Stuff: Desktop/Laptop
+apt install vim htop sudo fail2ban ufw unzip screen gufw powertop gparted sshuttle keepassx exfat-utils net-tools gnome-tweak-tool ubuntu-restricted-extras libavcodec-extra libdvd-pkg virtualbox virtualbox-ext-pack virtualbox-guest-additions-iso vlc steam-installer gimp telegram-desktop numix-blue-gtk-theme numix-gtk-theme numix-icon-theme build-essential nload curl software-properties-common dbus
+
+# Install Stuff: Desktop VM
+apt install vim htop sudo fail2ban ufw unzip screen gufw powertop gparted sshuttle keepassx exfat-utils net-tools gnome-tweak-tool ubuntu-restricted-extras libavcodec-extra vlc numix-blue-gtk-theme numix-gtk-theme numix-icon-theme build-essential nload curl software-properties-common dbus
+
+# Install Stuff: Windows 10 Linux (WSL)
+apt install vim htop unzip screen bash-completion net-tools build-essential curl software-properties-common python
+
+# Uninstall snap (Ubuntu 20.04)
+snap list
+snap remove [package]
+umount /snap/core/xxxx
+apt purge snapd
+rm -rf ~/snap
+rm -rf /snap
+rm -rf /var/snap
+rm -rf /var/lib/snapd
+
+# Install alternative software store
+apt-get install gnome-software --no-install-recommends
+
+# Configure environment
+update-alternatives --config editor
+
+# Configuring Aliases
+vi .bashrc
+
+alias sls='screen -ls'
+alias sr='screen -dRR'
+alias lxc-ls='lxc-ls --fancy'
+alias df='df -x"squashfs"'
+
+or
+
+echo "alias sls='screen -ls'" >> .bashrc
+echo "alias sr='screen -dRR'" >> .bashrc
+
+# Fixing gnome’s huge title bars (old)
+https://extensions.gnome.org/extension/723/pixel-saver/
+
+# Configure firewall https://wiki.debian.org/Uncomplicated%20Firewall%20(ufw)
+ufw default deny incoming
+ufw default allow outgoing
+ufw status verbose
+ufw allow ssh
+ufw allow 1000:2000/tcp
+ufw allow 1000:2000/udp
+ufw allow from 111.222.333.444
+ufw delete allow ssh
+ufw enable
+
+# Configure NIC names (18.04+)
+
+vi /etc/udev/rules.d/70-persistent-net.rules
+
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="c0:ff:ee:00:11:22", ATTR{dev_id}=="0x0", ATTR{type}=="1", NAME="eth0"
+
+18.04+
+
+vi /etc/default/grub
+GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+# Set grub timeout to 0
+vi /etc/default/grub
+GRUB_TIMEOUT=0
+ (set to -1 for infinite time)
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+# Static IPs with netplan (18.04)
+# vi /etc/netplan/something.yaml
+network:
+        version: 2
+        renderer: networkd
+        ethernets:
+                eth0:
+                        dhcp4: no
+                        addresses: [192.168.1.100/24]
+                        gateway4: 192.168.1.1
+                        nameservers:
+                                addresses: [9.9.9.9, 149.112.112.112]
+# netplan apply
+
+
+
+# Fix screen tearing
+
+mkdir /etc/X11/xorg.conf.d/
+vi /etc/X11/xorg.conf.d/20-intel.conf
+
+#
+Section "Device"
+ Identifier "Intel Graphics"
+ Driver "Intel"
+ Option "AccelMethod" "sna"
+ Option "TearFree" "true"
+EndSection
+#
+
+# Fix screen flickering in Chrome/Chromium maximized windows
+
+vi /usr/share/X11/xorg.conf.d/20-intel.conf
+
+#
+Section "Device"
+   Identifier "Intel Graphics"
+   Driver "intel"
+   Option "AccelMethod" "sna"
+   Option "TearFree" "true"
+   Option "DRI" "3"
+EndSection
+#
+
+
+# Fix Touchpad on XPS 13 (9343) Ubuntu 16.04
+
+vi /usr/share/X11/xorg.conf.d/51-synaptics-quirks.conf
+
+#
+# Disable generic Synaptics device, as we're using
+# "DLL0704:01 06CB:76AE Touchpad"
+# Having multiple touchpad devices running confuses syndaemon
+Section "InputClass"
+        Identifier "SynPS/2 Synaptics TouchPad"
+        MatchProduct "SynPS/2 Synaptics TouchPad"
+        MatchIsTouchpad "on"
+        MatchOS "Linux"
+        MatchDevicePath "/dev/input/event*"
+        Option "Ignore" "on"
+EndSection
+#
+
+# Power Config/Laptop
+
+# Info here: https://wiki.archlinux.org/index.php/Powertop
+
+powertop --html=powerreport.html
+
+awk -F '</?td ?>' '/tune/ { print $4 }' powerreport.html
+
+add to /etc/rc.local
+
+apt-get install laptop-mode-tools
+ OR (lmt causing display blinking issues on xps 13 9300 ubuntu 20.04)
+apt-get install tlp
+systemctl enable tlp
+systemctl restart tlp
+
+# Ramdisks
+tmpfs   /tmp            tmpfs   defaults,noatime,size=2048M     0       0
+tmpfs   /var/log        tmpfs   defaults,noatime,size=512M      0       0
+
+# Various extras
+
+add-apt-repository ppa:numix/ppa
+apt-get update
+apt-get install numix-gtk-theme numix-icon-theme-circle
+
+# Fix splash screen
+sudo update-alternatives --config default.plymouth
+
+# Fix audio in Ubuntu 18.04 and Chrome
+https://askubuntu.com/questions/1086658/no-sound-audio-in-chrome-ubuntu-18-04lts
+vi /etc/pulse/default.pa
+ find the line that starts with load-module module-stream-restore and add restore_device=false
+ at the end
+killall pulseaudio
+# XPS 13 no wifi on install
+apt purge bcmwl-kernel-source
+apt install build-essential
+apt install bcmwl-kernel-source linux-generic
+
+# Reduce bloat
+gsettings set org.gnome.desktop.interface enable-animations 'false'
+gsettings set org.gnome.desktop.search-providers disable-external 'true'
+
+# XPS 13 9300 (2020) screen flashing black intermittently while on battery power
+Due to tlp or laptop-mode-tools toggling an intel audio powersaving feature. Solution appears to be to disable that feature.
+
+TLP:
+vi /etc/tlp.conf
+uncomment this line and change to 0:
+SOUND_POWER_SAVE_ON_BAT=0
+
+systemctl restart tlp
+
