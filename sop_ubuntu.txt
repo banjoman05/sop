@@ -25,6 +25,10 @@ rm -rf /snap
 rm -rf /var/snap
 rm -rf /var/lib/snapd
 
+# don't allow it to be installed again (it likes to reinstall through other packages)
+apt-mark hold snapd
+
+
 # Install alternative software store
 apt-get install gnome-software --no-install-recommends
 
