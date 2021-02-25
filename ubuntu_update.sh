@@ -21,3 +21,7 @@ echo "##### Restarting server #####"
 /sbin/shutdown -r 5
 
 echo "Reboot initiated at `date`" >> ~/ubuntu_update.log
+
+
+# Crontab
+#0 6 * * * ~/ubuntu_update.sh >/dev/null 2>&1
