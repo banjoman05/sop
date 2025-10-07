@@ -1,0 +1,22 @@
+# Install Stuff: Desktop/Laptop
+rpm-ostree install htop fail2ban screen gparted sshuttle nload
+
+# Configuring Aliases
+vi .bashrc
+
+alias sls='screen -ls'
+alias sr='screen -dRR'
+
+# App indicator icons
+(OLD) https://extensions.gnome.org/extension/1031/topicons/
+(OLD) https://extensions.gnome.org/extension/4944/app-icons-taskbar/
+https://extensions.gnome.org/extension/615/appindicator-support/
+https://extensions.gnome.org/extension/7281/display-configuration-switcher/
+https://extensions.gnome.org/extension/7080/toggle-headphone/
+https://extensions.gnome.org/extension/5940/quick-settings-audio-panel/
+https://extensions.gnome.org/extension/2890/tray-icons-reloaded/
+
+# match login screen display config to custom
+# e.g. dual monitor primary/secondary/etc...
+# don’t know if this works with atomic
+sudo cp ~/.config/monitors.xml ~gdm/.config/
